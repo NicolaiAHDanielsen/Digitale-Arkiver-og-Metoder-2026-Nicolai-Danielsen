@@ -1,0 +1,167 @@
+---
+title: 'Text mining, sentiment analysis, and visualization on Game Of Thrones'
+date: '19-05-2026'
+output: html_document
+---
+
+  knitr::opts_chunk$set(echo = TRUE,
+                        warning = FALSE,
+                        message = FALSE)
+
+library(tidyverse)
+library(here)
+
+library(tidyverse)
+library(here)
+library(pdftools)
+library(tidytext)
+library(textdata)
+library(ggwordcloud)
+
+
+got_path <- here("data", "got.pdf")
+got_path
+got_text <- pdf_text(got_path)
+got_text
+
+got_p9 <- got_text[9]
+got_p9
+
+
+
+got_df <- data.frame(got_text) %>%
+  mutate(text_full = str_split(got_text, pattern = '\n')) %>%
+  unnest(text_full) %>%
+  mutate(text_full = str_trim(text_full))
+
+got_df
+
+got_tokens <- got_df %>%
+  unnest_tokens(word, text_full)
+
+got_tokens
+
+got_wc <- got_tokens %>%
+  count(word) %>%
+  arrange(-n)
+got_wc
+
+?stop_words
+got_stop <- got_tokens %>%
+  anti_join(stop_words) %>%
+  select(-got_text)
+
+got_swc <- got_stop %>%
+  count(word) %>%
+  arrange(-n)
+got_swc
+
+got_no_numeric <- got_stop %>%
+  filter(is.na(as.numeric(word)))
+
+got_no_numeric %>%
+  count(word) %>%
+  arrange(-n)
+
+length(unique(got_no_numeric$word))
+
+got_top100 <- got_no_numeric %>%
+  count(word) %>%
+  arrange(-n) %>%
+  head(100)
+got_top100
+
+got_cloud <- ggplot(data = got_top100, aes(label = word)) +
+  geom_text_wordcloud() +
+  theme_minimal()
+
+got_cloud
+
+ggplot(data = got_top100, aes(label = word, size = n)) +
+  geom_text_wordcloud_area(aes(color = n), shape = "star") +
+  scale_size_area(max_size = 12) +
+  scale_color_gradientn(colors = c("darkgreen","blue","red")) +
+  theme_minimal()
+
+get_sentiments(lexicon = "afinn")
+
+afinn_pos <- get_sentiments("afinn") %>%
+  filter(value %in% c(3,4,5))
+
+afinn_neg <- get_sentiments("afinn") %>%
+  filter(value %in% c(-3, -4, -5))
+
+get_sentiments(lexicon = "bing")
+
+get_sentiments(lexicon = "nrc")
+
+got_afinn <- got_stop %>%
+  inner_join(get_sentiments("afinn"))
+got_afinn
+
+got_afinn_hist <- got_afinn %>% 
+  count(value)
+
+ggplot(data = got_afinn_hist, aes(x = value, y = n)) +
+  geom_col(aes(fill = value)) +
+  theme_bw()
+
+got_afinn2 <- got_afinn %>%
+  filter(value == 2)
+
+unique(got_afinn2$word)
+
+got_afinn2_n <- got_afinn2 %>%
+  count(word, sort = TRUE) %>%
+  mutate(word = fct_reorder(factor(word), n))
+
+ggplot(data = got_afinn2_n, aes(x = word, y = n)) +
+  geom_col() +
+  coord_flip() +
+  theme_bw()
+
+got_summary <- got_afinn %>%
+  summarize(
+    mean_score = mean(value),
+    median_score = median(value)
+  )
+got_summary
+
+got_nrc <- got_stop %>%
+  inner_join(get_sentiments("nrc"))
+
+got_exclude <- got_stop %>%
+  anti_join(get_sentiments("nrc"))
+
+got_exclude_n <- got_exclude %>%
+  count(word, sort = TRUE)
+
+head(got_exclude_n)
+
+got_nrc_n <- got_nrc %>%
+  count(sentiment, sort = TRUE)
+
+ggplot(data = got_nrc_n, aes(x = sentiment, y = n)) +
+  geom_col(aes(fill = sentiment))+
+  theme_bw()
+
+got_nrc_n5 <- got_nrc %>%
+  count(word,sentiment, sort = TRUE) %>%
+  group_by(sentiment) %>%
+  top_n(5) %>%
+  ungroup()
+
+got_nrc_gg <- ggplot(data = got_nrc_n5, aes(x = reorder(word,n), y = n, fill = sentiment)) +
+
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, ncol = 2, scales = "free") +
+  coord_flip() +
+  theme_minimal() +
+  labs(x = "Word", y = "count")
+
+got_nrc_gg
+
+ggsave(plot = got_nrc_gg,
+       here("figures","got_nrc_sentiment.png"),
+       height = 8,
+       width = 5)
