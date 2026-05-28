@@ -1,0 +1,138 @@
+[
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "alder",
+    "expression": "grel:value.replace(\"years\",\"\")\n     .replace(\"yrs\",\"\")\n     .replace(\"year\",\"\")\n     .replace(\"?\",\"\")\n     .replace(\"about\",\"\")\n     .trim()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column alder using expression grel:value.replace(\"years\",\"\")\n     .replace(\"yrs\",\"\")\n     .replace(\"year\",\"\")\n     .replace(\"?\",\"\")\n     .replace(\"about\",\"\")\n     .trim()"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "alder",
+    "expression": "value.toNumber()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column alder using expression value.toNumber()"
+  },
+  {
+    "op": "core/column-addition",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "baseColumnName": "alder",
+    "expression": "grel:floor(value / 10) * 10 + \"-\" + (floor(value / 10) * 10 + 10)",
+    "onError": "set-to-blank",
+    "newColumnName": "Age Groups",
+    "columnInsertIndex": 14,
+    "description": "Create column Age Groups at index 14 based on column alder using expression grel:floor(value / 10) * 10 + \"-\" + (floor(value / 10) * 10 + 10)"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [
+        {
+          "type": "list",
+          "name": "koen",
+          "expression": "value",
+          "columnName": "koen",
+          "invert": false,
+          "omitBlank": false,
+          "omitError": false,
+          "selection": [
+            {
+              "v": {
+                "v": "kvinde",
+                "l": "kvinde"
+              }
+            }
+          ],
+          "selectBlank": false,
+          "selectError": false
+        },
+        {
+          "type": "list",
+          "name": "ft",
+          "expression": "value",
+          "columnName": "ft",
+          "invert": false,
+          "omitBlank": false,
+          "omitError": false,
+          "selection": [
+            {
+              "v": {
+                "v": "1834",
+                "l": "1834"
+              }
+            }
+          ],
+          "selectBlank": false,
+          "selectError": false
+        },
+        {
+          "type": "list",
+          "name": "Age Groups",
+          "expression": "value",
+          "columnName": "Age Groups",
+          "invert": false,
+          "omitBlank": false,
+          "omitError": false,
+          "selection": [
+            {
+              "v": {
+                "v": "30-40",
+                "l": "30-40"
+              }
+            }
+          ],
+          "selectBlank": false,
+          "selectError": false
+        }
+      ],
+      "mode": "row-based"
+    },
+    "columnName": "erhverv",
+    "expression": "grel:if(value.contains(\"søn\"), \"søn\",\nif(value.contains(\"datter\"), \"datter\",\nif(value.contains(\"kone\"), \"kone\",\nvalue)))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column erhverv using expression grel:if(value.contains(\"søn\"), \"søn\",\nif(value.contains(\"datter\"), \"datter\",\nif(value.contains(\"kone\"), \"kone\",\nvalue)))"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "erhverv",
+    "expression": "grel:if(value.contains(\"søn\"), \"søn\",\nif(value.contains(\"datter\"), \"datter\",\nif(value.contains(\"kone\"), \"kone\",\nvalue)))",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column erhverv using expression grel:if(value.contains(\"søn\"), \"søn\",\nif(value.contains(\"datter\"), \"datter\",\nif(value.contains(\"kone\"), \"kone\",\nvalue)))"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "erhverv",
+    "expression": "value.toLowercase()",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column erhverv using expression value.toLowercase()"
+  }
+]
