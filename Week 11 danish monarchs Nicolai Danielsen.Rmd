@@ -1,0 +1,71 @@
+---
+title: "Week 11 Danish monarchs"
+author: "Nicolai Danielsen"
+date: "14-05-2026"
+output: html_document
+---
+nrow(kings)
+ncol(Kings)
+head(Kings)
+tail(Kings)
+glimpse(Kings)
+head(Kings)
+class(Kings)
+read.csv2("kings")
+read.csv("kings.csv")
+read_csv("kings.csv")
+read_csv2("kings.csv")
+read.csv("kings.csv")
+read.csv2("kings.csv")
+read_csv("kings.csv")
+class("kings.csv")
+read.csv("kings.csv")
+class(Kings)
+nrow(Kings)
+ncol(Kings)
+tail(Kings)
+glimpse(Kings)
+head(Kings)
+tibble(Kings)
+library(tidyverse)
+
+Kings <- Kings %>%
+  mutate(
+    Start_year = na_if(Start_year, "NULL"),
+    End_year = na_if(End_year, "NULL"),
+    Start_year = as.numeric(Start_year),
+    End_year = as.numeric(End_year)
+  )
+
+Kings <- Kings %>%
+  mutate(duration = End_year - Start_year)
+head(Kings)
+glimpse(Kings)
+head(Kings)
+mean(Kings$duration, na.rm = TRUE)
+Kings %>%
+  summarize(avg_duration = mean(duration, na.rm = TRUE))
+Kings %>%
+  filter(duration > mean(duration, na.rm = TRUE)) %>%
+  count()
+Kings %>%
+  filter(duration > mean(duration, na.rm = TRUE))
+
+
+top3 <- Kings %>%
+  arrange(desc(duration)) %>%
+  slice(1:3)
+top3 <- top3 %>%
+  mutate(Days = duration * 365)
+top3 <- top3 %>%
+  mutate(Days = duration * 365 + floor(duration / 4))
+top3
+Kings %>%
+  arrange(desc(duration)) %>%
+  slice(1:3) %>%
+  mutate(Days = duration * 365 + floor(duration / 4))
+readKings <- Kings %>%
+  mutate(midyear = Start_year + (End_year - Start_year) / 2)
+ggplot(Kings, aes(x = midyear, y = duration)) +
+  geom_point() +
+  geom_smooth()
