@@ -1,0 +1,248 @@
+
+library(tidyverse)
+library(patchwork)
+library(scales)
+
+setwd("C:/Users/danie/OneDrive/Skrivebord/Digitale arkiver og metoder/Final product projekter/Final report Nicolai Danielsen")
+
+data <- read_csv("Final-Projekt-Census-1801-1834.csv")
+
+glimpse(data)
+head(data)
+names(data)
+
+women <- data %>%
+  filter(koen == "kvinde")
+
+
+women <- women %>%
+  mutate(age_group = case_when(
+    alder >= 10 & alder < 20 ~ "10-20",
+    alder >= 20 & alder < 30 ~ "20-30",
+    alder >= 30 & alder < 40 ~ "30-40",
+    alder >= 40 ~ "40+",
+    TRUE ~ NA_character_
+  ))
+
+table(women$age_group)
+
+women$age_group <- factor(
+  women$age_group,
+  levels = c("10-20", "20-30", "30-40", "40+")
+)
+
+
+women_counts <- women %>%
+  group_by(age_group, civilstand, ft) %>%
+  summarise(n = n(), .groups = "drop")
+
+women_percent <- women %>%
+  group_by(age_group, civilstand, ft) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(age_group, ft) %>%
+  mutate(percent = n / sum(n) * 100) %>%
+  ungroup()
+
+
+theme_journal <- theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
+
+
+p1 <- ggplot(women_counts,
+             aes(x = age_group,
+                 y = n,
+                 fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  facet_wrap(~ ft, ncol = 2) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Counts",
+    x = "Age group",
+    y = "Number of women"
+  ) +
+  theme_journal
+
+p2 <- ggplot(women_percent,
+             aes(x = age_group,
+                 y = percent,
+                 fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  facet_wrap(~ ft, ncol = 2) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(
+    title = "Percentages",
+    x = "Age group",
+    y = "Percent"
+  ) +
+  theme_journal
+
+p1 + p2
+
+
+women_20_30_marriage_pct <- women_percent %>%
+  filter(age_group == "20-30")
+
+p_marriage_20_30_pct <- ggplot(women_20_30_marriage_pct,
+                               aes(x = civilstand,
+                                   y = percent,
+                                   fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  facet_wrap(~ ft, ncol = 2) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(
+    title = "Marriages between 20-30",
+    x = "Marriage status",
+    y = "Percent",
+    fill = "Civilstand"
+  ) +
+  theme_journal +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 0, hjust = 0.5)
+  )
+
+print(p_marriage_20_30_pct)
+
+women_30_40_marriage_pct <- women_percent %>%
+  filter(age_group == "30-40")
+
+p_marriage_30_40_pct <- ggplot(women_30_40_marriage_pct,
+                               aes(x = civilstand,
+                                   y = percent,
+                                   fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  facet_wrap(~ ft, ncol = 2) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(
+    title = "Marriages between 30-40",
+    x = "Marriage status",
+    y = "Percent",
+    fill = "Civilstand"
+  ) +
+  theme_journal +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 0, hjust = 0.5)
+  )
+
+women_erhverv_ft_counts <- women %>%
+  filter(!is.na(erhverv)) %>%
+  group_by(erhverv, age_group, civilstand, ft) %>%
+  summarise(n = n(), .groups = "drop")
+
+print(p_marriage_30_40_pct)
+
+data_plot_1801 <- women %>%
+  filter(age_group == "20-30", ft == 1801, !is.na(erhverv)) %>%
+  group_by(erhverv, civilstand) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(erhverv) %>%
+  mutate(total = sum(n)) %>%
+  ungroup() %>%
+  slice_max(total, n = 10, with_ties = FALSE)
+
+p_erhverv_20_30_1801 <- ggplot(data_plot_1801,
+                               aes(y = reorder(erhverv, total), x = n, fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  scale_x_continuous(labels = function(x) paste0(round((x / sum(data_plot_1801$n)) * 100, 1), "%")) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Most common occupations Age 20-30 1801",
+    x = "Percent of Total Women",
+    y = "Occupation (Erhverv)",
+    fill = "Civilstand"
+  ) +
+  theme_journal +
+  theme(legend.position = "bottom")
+
+print(p_erhverv_20_30_1801)
+
+
+
+data_plot_1834 <- women %>%
+  filter(age_group == "20-30", ft == 1834, !is.na(erhverv)) %>%
+  group_by(erhverv, civilstand) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(erhverv) %>%
+  mutate(total = sum(n)) %>%
+  ungroup() %>%
+  slice_max(total, n = 10, with_ties = FALSE)
+
+p_erhverv_20_30_1834 <- ggplot(data_plot_1834,
+                               aes(y = reorder(erhverv, total), x = n, fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  scale_x_continuous(labels = function(x) paste0(round((x / sum(data_plot_1834$n)) * 100, 1), "%")) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Most common occupations Age 20-30 1834",
+    x = "Percent of Total Women",
+    y = "Occupation (Erhverv)",
+    fill = "Civilstand"
+  ) +
+  theme_journal +
+  theme(legend.position = "bottom")
+
+print(p_erhverv_20_30_1834)
+
+data_plot_1801_30_40 <- women %>%
+  filter(age_group == "30-40", ft == 1801, !is.na(erhverv)) %>%
+  group_by(erhverv, civilstand) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(erhverv) %>%
+  mutate(total = sum(n)) %>%
+  ungroup() %>%
+  slice_max(total, n = 10, with_ties = FALSE)
+
+p_erhverv_30_40_1801 <- ggplot(data_plot_1801_30_40,
+                               aes(y = reorder(erhverv, total), x = n, fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  scale_x_continuous(labels = function(x) paste0(round((x / sum(data_plot_1801_30_40$n)) * 100, 1), "%")) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Most common occupations Age 30-40 1801",
+    x = "Percent of Total Women",
+    y = "Occupation (Erhverv)",
+    fill = "Civilstand"
+  ) +
+  theme_journal +
+  theme(legend.position = "bottom")
+
+print(p_erhverv_30_40_1801)
+
+data_plot_1834_30_40 <- women %>%
+  filter(age_group == "30-40", ft == 1834, !is.na(erhverv)) %>%
+  group_by(erhverv, civilstand) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(erhverv) %>%
+  mutate(total = sum(n)) %>%
+  ungroup() %>%
+  slice_max(total, n = 10, with_ties = FALSE)
+
+p_erhverv_30_40_1834 <- ggplot(data_plot_1834_30_40,
+                               aes(y = reorder(erhverv, total), x = n, fill = civilstand)) +
+  geom_col(color = "white", linewidth = 0.3) +
+  scale_x_continuous(labels = function(x) paste0(round((x / sum(data_plot_1834_30_40$n)) * 100, 1), "%")) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Most common occupations Age 30-40 1834",
+    x = "Percent of Total Women",
+    y = "Occupation (Erhverv)",
+    fill = "Civilstand"
+  ) +
+  theme_journal +
+  theme(legend.position = "bottom")
+
+print(p_erhverv_30_40_1834)
+
